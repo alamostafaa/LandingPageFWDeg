@@ -17,106 +17,84 @@
  * Define Global Variables
  * 
 */
-const toTheTop =document.getElementById('toTop');
-const addContent =document.getElementById('addContent');
-const nav =document.getElementById('navbar__list');
-const main = document.querySelector('main');
-const navBarMenu = document.querySelector('.page__header')
+const sections = document.querySelectorAll('section');
+const ul = document.getElementById('navbar__list');
+let navFrag = new DocumentFragment;
 
 
-//add sections 
-let counter=0;
-let addSection =() => {
- counter++;
- const paragraph = `<section id="section${counter}" data-nav="Section ${counter}" >
- <div class="landing__container">
-   <h2>Section ${counter}</h2>
-   <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi fermentum metus faucibus lectus pharetra dapibus. Suspendisse potenti. Aenean aliquam elementum mi, ac euismod augue. Donec eget lacinia ex. Phasellus imperdiet porta orci eget mollis. Sed convallis sollicitudin mauris ac tincidunt. Donec bibendum, nulla eget bibendum consectetur, sem nisi aliquam leo, ut pulvinar quam nunc eu augue. Pellentesque maximus imperdiet elit a pharetra. Duis lectus mi, aliquam in mi quis, aliquam porttitor lacus. Morbi a tincidunt felis. Sed leo nunc, pharetra et elementum non, faucibus vitae elit. Integer nec libero venenatis libero ultricies molestie semper in tellus. Sed congue et odio sed euismod.</p>
+/**
+ * End Global Variables
+ * 
+*/
 
-   <p>Aliquam a convallis justo. Vivamus venenatis, erat eget pulvinar gravida, ipsum lacus aliquet velit, vel luctus diam ipsum a diam. Cras eu tincidunt arcu, vitae rhoncus purus. Vestibulum fermentum consectetur porttitor. Suspendisse imperdiet porttitor tortor, eget elementum tortor mollis non.</p>
 
-</section>`;
+/**
+ * Begin Main Functions
+ * 
+*/
 
-main.insertAdjacentHTML("beforeend", paragraph);
+// build the nav
+const nav = () => {
+    for (let section of sections)
+    {
+        let list = document.createElement('li');
+        let link = document.createElement('a');
+        link.classList.add('menu__link');//to add css propreties
+        link.href=`#${section.id}`;//add swection's anchor
+        link.textContent=`${section.dataset.nav}`;
+       
+        list.appendChild(link);
+        navFrag.appendChild(list); 
+    }  
+    ul.appendChild(navFrag);
 };
 
+// Add class 'active' to section when near top of viewport
+let activeSec = (e) => {
+    const observer =  new IntersectionObserver ((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting)
+            {
+                entry.target.classList.add('your-active-class');
+            }
+            else 
+            {
+                entry.target.classList.remove('your-active-class');
+            }
+        })
+    }, {threshold: [0.5],});
 
-//add nav items
-let addNavItem =() =>
-{
-    
-    nav.innerHTML='';
-    document.querySelectorAll("section").forEach((section) =>
-     {
-    const listSection = `<li><a class="menu__link" href="#${section.id}" data-nav="${section.id}">${section.dataset.nav}</a></li> `;
-    nav.insertAdjacentHTML('beforeend',listSection);
-    });
+    observer.observe(e);
 }
 
+// Scroll to anchor ID using scrollIntoView event smothly
+let scrollfn = (e) => {
 
-//adding four sections & navItems
-for (let i =0; i<4; ++i)
-{
-    addSection();
-    addNavItem();
-};
-
-
-//to the top button function
-document.addEventListener('scroll', function (){
-
-// to make the button appear while scrolling to a specific limit -550-
-if (window.scrollY >= '550')
-{
-    toTheTop.style.display = 'block';
-
-    //to make the button go to the top when is clicked
-    toTheTop.addEventListener('click', function () {
-        window.scrollTo(0,0);
-    });
-    
+    document.querySelector(`${e.getAttribute('href')}`).scrollIntoView({
+       block:"center",
+       behavior: "smooth",
+});    
 }
-// to make the button disappear while scrolling to a limit smaller than 550
-else
+
+/**
+ * End Main Functions
+ * Begin Events
+ * 
+*/
+
+//mZ Build menu 
+nav();
+
+// Scroll to section on link click
+let links = document.querySelectorAll('a');
+links.forEach(link => 
 {
-    toTheTop.style.display = 'none';
-}
-});
-
-
-// add observertion to the sections
-const observer = new IntersectionObserver(function (entries) {
-    entries.forEach((entry) => {
-    let activeLink= nav.querySelector(`[data-nav=${entry.target.id}]`)
-       if (entry.isIntersecting)
-       {
-           entry.target.classList.add('your-active-class');
-           activeLink.classList.add('active-link');
-       }
-       else
-       {
-        entry.target.classList.remove('your-active-class');
-        activeLink.classList.remove('active-link');
-       }
-    })
-},{
-    threshold:0.8,
-});
-
-
-//to make the func. run every time we added new section
-document.addEventListener('scroll', () =>{
-    return document.querySelectorAll('section').forEach((section) => {
-    observer.observe(section)
-})
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+    scrollfn(link);
 }); 
+});
 
-// when the page is quiet for 5s the menu (header) will disapear
-let scrolling;
-document.onscroll = () => {
-  navBarMenu.style.display="block";
-  clearTimeout(scrolling);
-  scrolling = setTimeout(() => {
-      navBarMenu.style.display= "none";
-  }, 5000);
-};
+    
+// Set sections as active
+sections.forEach( section => activeSec(section));
